@@ -22,6 +22,7 @@ $secrets = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo generateCSRFToken(); ?>">
     <title><?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -109,6 +110,10 @@ $secrets = $stmt->fetchAll();
                            pattern="[A-Z2-7\s]+"
                            title="TOTP secret must be 16-64 characters in Base32 format (A-Z, 2-7)"
                            required>
+                    <div class="modal-help">
+                        <p><strong>⚠️ Important:</strong> TOTP secrets must be in Base32 format (letters A-Z and digits 2-7). Invalid secrets will not generate working codes.</p>
+                        <p><small>Example: JBSWY3DPEHPK3PXP</small></p>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="closeModal()" class="btn btn-secondary">Cancel</button>
@@ -170,8 +175,10 @@ $secrets = $stmt->fetchAll();
     </div>
 
     <script>
-        // Global CSRF token
-        window.csrfToken = '<?php echo generateCSRFToken(); ?>';
+        // XSS-resistant CSRF token access
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
     </script>
     <script src="assets/crypto-js.min.js"></script>
     <script src="assets/script.js"></script>

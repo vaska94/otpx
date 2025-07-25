@@ -146,6 +146,28 @@ function getValidationErrors() {
     ];
 }
 
+// Cryptographic validation functions
+function validateBase64($data) {
+    // Check if string is valid Base64
+    if (!preg_match('/^[A-Za-z0-9+\/]+=*$/', $data)) {
+        return false;
+    }
+    
+    // Verify it can be decoded
+    $decoded = base64_decode($data, true);
+    if ($decoded === false) {
+        return false;
+    }
+    
+    // Re-encode to check for padding issues
+    return base64_encode($decoded) === rtrim($data, '=') . str_repeat('=', (4 - strlen(rtrim($data, '=')) % 4) % 4);
+}
+
+function validateHex($data) {
+    // Check if string contains only hexadecimal characters
+    return ctype_xdigit($data) && strlen($data) % 2 === 0;
+}
+
 // Database connection
 function createDatabase() {
     if (DB_TYPE === 'sqlite') {
@@ -217,7 +239,10 @@ function createDatabase() {
             
             return $pdo;
         } catch (PDOException $e) {
-            die("SQLite connection failed: " . $e->getMessage());
+            // Log detailed error for administrators
+            error_log("SQLite connection failed: " . $e->getMessage());
+            // Show generic error to users
+            die("Database connection failed. Please contact the administrator.");
         }
     } else {
         // MySQL connection with auto-initialization
@@ -317,10 +342,16 @@ function createDatabase() {
                     
                     return $pdo;
                 } catch (PDOException $e2) {
-                    die("MySQL connection failed: " . $e2->getMessage());
+                    // Log detailed error for administrators
+                    error_log("MySQL database creation failed: " . $e2->getMessage());
+                    // Show generic error to users
+                    die("Database connection failed. Please contact the administrator.");
                 }
             } else {
-                die("MySQL connection failed: " . $e->getMessage());
+                // Log detailed error for administrators
+                error_log("MySQL connection failed: " . $e->getMessage());
+                // Show generic error to users
+                die("Database connection failed. Please contact the administrator.");
             }
         }
     }

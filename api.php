@@ -31,15 +31,27 @@ switch ($action) {
         // Validate inputs
         if (strlen($name_encrypted) < 10 || strlen($name_encrypted) > 5000) {
             $response['error'] = 'Invalid encrypted name length';
+        } elseif (!validateBase64($name_encrypted)) {
+            $response['error'] = 'Invalid encrypted name format';
         } elseif (strlen($name_iv) < 16 || strlen($name_iv) > 64) {
+            $response['error'] = 'Invalid name IV format';
+        } elseif (!validateHex($name_iv)) {
             $response['error'] = 'Invalid name IV format';
         } elseif (strlen($name_salt) < 16 || strlen($name_salt) > 64) {
             $response['error'] = 'Invalid name salt format';
+        } elseif (!validateHex($name_salt)) {
+            $response['error'] = 'Invalid name salt format';
         } elseif (strlen($encrypted_secret) < 10 || strlen($encrypted_secret) > 5000) {
             $response['error'] = 'Invalid encrypted secret length';
+        } elseif (!validateBase64($encrypted_secret)) {
+            $response['error'] = 'Invalid encrypted secret format';
         } elseif (strlen($secret_iv) < 16 || strlen($secret_iv) > 64) {
             $response['error'] = 'Invalid secret IV format';
+        } elseif (!validateHex($secret_iv)) {
+            $response['error'] = 'Invalid secret IV format';
         } elseif (strlen($secret_salt) < 16 || strlen($secret_salt) > 64) {
+            $response['error'] = 'Invalid secret salt format';
+        } elseif (!validateHex($secret_salt)) {
             $response['error'] = 'Invalid secret salt format';
         } elseif ($name_encrypted && $name_iv && $name_salt && $encrypted_secret && $secret_iv && $secret_salt) {
             try {

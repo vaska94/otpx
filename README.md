@@ -220,6 +220,6 @@ This software is provided "as is" without warranty. Users are responsible for:
 - **Compliance** with applicable security standards
 
 For production use, consider additional security measures such as:
-- **Web Application Firewall (WAF)**
+- **Web Application Firewall (WAF)** - We recommend Cloudflare for DDoS protection and security filtering
 - **Rate limiting** and intrusion detection
 - **Regular security audits** and penetration testing

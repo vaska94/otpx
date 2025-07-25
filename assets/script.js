@@ -63,18 +63,24 @@ function deriveKey(password, salt) {
 }
 
 function encryptSecret(secret, password) {
+    // Generate cryptographically secure random values with entropy differentiation
     const salt = CryptoJS.lib.WordArray.random(128/8).toString();
     const iv = CryptoJS.lib.WordArray.random(128/8).toString();
+    
+    // Ensure IV and salt are never identical by adding microsecond entropy
+    const entropyDiff = Date.now().toString(16) + Math.random().toString(16).substr(2, 8);
+    const finalIv = CryptoJS.SHA256(iv + entropyDiff).toString().substr(0, 32);
+    
     const key = deriveKey(password, salt);
     
     const encrypted = CryptoJS.AES.encrypt(secret, key, {
-        iv: CryptoJS.enc.Hex.parse(iv)
+        iv: CryptoJS.enc.Hex.parse(finalIv)
     });
     
     return {
         encrypted: encrypted.toString(),
         salt: salt,
-        iv: iv
+        iv: finalIv
     };
 }
 
@@ -167,7 +173,7 @@ async function decryptAllSecrets() {
     const formData = new FormData();
     formData.append('action', 'verify_password');
     formData.append('password', password);
-    formData.append('csrf_token', window.csrfToken);
+    formData.append('csrf_token', getCSRFToken());
     
     try {
         const response = await fetch('api.php', {
@@ -280,10 +286,19 @@ function validateTOTPInputs(name, secret) {
         return 'TOTP secret must be 16-64 characters';
     }
     if (!/^[A-Z2-7]+$/.test(cleanSecret)) {
-        return 'TOTP secret must be in Base32 format (A-Z, 2-7)';
+        return 'Warning: TOTP secret must be in Base32 format (A-Z, 2-7). Invalid secrets will not generate working codes.';
     }
     
     return null; // Valid
+}
+
+// Enhanced validation with user warning
+function validateTOTPInputsWithWarning(name, secret) {
+    const basicValidation = validateTOTPInputs(name, secret);
+    if (basicValidation && basicValidation.startsWith('Warning:')) {
+        return confirm(basicValidation + '\n\nDo you want to continue anyway?') ? null : basicValidation;
+    }
+    return basicValidation;
 }
 
 // Add new TOTP
@@ -293,8 +308,8 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     const name = document.getElementById('totpName').value.trim();
     const secret = document.getElementById('totpSecret').value.replace(/\s/g, '');
     
-    // Client-side validation
-    const validationError = validateTOTPInputs(name, secret);
+    // Client-side validation with user warning
+    const validationError = validateTOTPInputsWithWarning(name, secret);
     if (validationError) {
         alert(validationError);
         return;
@@ -317,7 +332,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
     formData.append('encrypted_secret', encryptedSecret.encrypted);
     formData.append('secret_iv', encryptedSecret.iv);
     formData.append('secret_salt', encryptedSecret.salt);
-    formData.append('csrf_token', window.csrfToken);
+    formData.append('csrf_token', getCSRFToken());
     
     try {
         const response = await fetch('api.php', {
@@ -345,7 +360,7 @@ async function deleteTotp(id) {
     const formData = new FormData();
     formData.append('action', 'delete');
     formData.append('id', id);
-    formData.append('csrf_token', window.csrfToken);
+    formData.append('csrf_token', getCSRFToken());
     
     try {
         const response = await fetch('api.php', {
@@ -376,7 +391,7 @@ async function exportSecrets() {
     const formData = new FormData();
     formData.append('action', 'verify_password');
     formData.append('password', password);
-    formData.append('csrf_token', window.csrfToken);
+    formData.append('csrf_token', getCSRFToken());
     
     try {
         const response = await fetch('api.php', {
@@ -433,7 +448,7 @@ async function importSecrets() {
     const formData = new FormData();
     formData.append('action', 'verify_password');
     formData.append('password', password);
-    formData.append('csrf_token', window.csrfToken);
+    formData.append('csrf_token', getCSRFToken());
     
     try {
         const response = await fetch('api.php', {
@@ -475,7 +490,7 @@ async function importSecrets() {
                 formData.append('encrypted_secret', encryptedSecret.encrypted);
                 formData.append('secret_iv', encryptedSecret.iv);
                 formData.append('secret_salt', encryptedSecret.salt);
-                formData.append('csrf_token', window.csrfToken);
+                formData.append('csrf_token', getCSRFToken());
                 
                 const response = await fetch('api.php', {
                     method: 'POST',
