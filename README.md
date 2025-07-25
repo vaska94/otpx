@@ -122,7 +122,7 @@ define('SESSION_LIFETIME', 3600);       // Session timeout (1 hour)
 
 ### Encryption Flow
 ```
-User Password → PBKDF2 (25k iterations) → AES-256 Key → Encrypt Secrets
+User Password → PBKDF2 (15k iterations) → AES-256 Key → Encrypt Secrets
 ```
 
 ### Data Protection
