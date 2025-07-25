@@ -2,6 +2,10 @@
 
 A privacy-focused, web-based Two-Factor Authentication (2FA) token manager with client-side encryption. Similar to Google Authenticator but with enhanced security and web accessibility.
 
+![OTPx Dashboard](screenshot.png)
+
+*Clean, modern interface with real-time TOTP code generation*
+
 ## 🔒 Security Features
 
 - **Client-side AES encryption** with separate IV/salt for each secret
